@@ -29,6 +29,15 @@ def zero_loss(y_true, y_pred):
 	return 0.5 * K.sum(y_pred, axis=0)
 
 def compose_spkFeat_dic(lines, model, f_desc_dic, base_dir):
+	'''
+	Extracts speaker embeddings from a given model
+	=====
+
+	lines: (list) A list of strings that indicate each utterance
+	model: (keras model) DNN that extracts speaker embeddings,
+		output layer should be rmoved(model_pred)
+	f_desc_dic: (dictionary) A dictionary of file objects
+	'''
 	dic_spkFeat = {}
 	for line in tqdm(lines, desc='extracting spk feats'):
 		k, f, p = line.strip().split(' ')
@@ -38,14 +47,19 @@ def compose_spkFeat_dic(lines, model, f_desc_dic, base_dir):
 			f_desc_dic[f] = open(f_tmp, 'rb')
 
 		f_desc_dic[f].seek(p)
-		l = struct.unpack('i', f_desc_dic[f].read(4))[0]
-		utt = np.asarray(struct.unpack('%df'%l, f_desc_dic[f].read(l * 4)), dtype=np.float32)
-		spkFeat = model.predict(utt.reshape(1,-1,1))[0]
+		l = struct.unpack('i', f_desc_dic[f].read(4))[0]# number of samples of each utterance
+		utt = np.asarray(struct.unpack('%df'%l, f_desc_dic[f].read(l * 4)), dtype=np.float32)# read binary utterance 
+		spkFeat = model.predict(utt.reshape(1,-1,1))[0]# extract speaker embedding from utt
 		dic_spkFeat[k] = spkFeat
 
 	return dic_spkFeat
 
 def make_spkdic(lines):
+	'''
+	Returns a dictionary where
+		key: (str) speaker name
+		value: (int) unique integer for each speaker
+	'''
 	idx = 0
 	dic_spk = {}
 	list_spk = []
@@ -60,7 +74,10 @@ def make_spkdic(lines):
 
 def compose_batch(lines, f_desc_dic, dic_spk, nb_samp, base_dir):
 	'''
-	designed to read pre-emphasized floats!
+	Compose one mini-batch using utterances in `lines'
+
+	nb_samp: (int) duration of utterance at train phase.
+		Fixed for each mini-batch for mini-batch training.
 	'''
 	batch = []
 	ans = []
@@ -85,6 +102,9 @@ def compose_batch(lines, f_desc_dic, dic_spk, nb_samp, base_dir):
 	return (np.asarray(batch, dtype=np.float32).reshape(len(lines), -1, 1), np.asarray(ans))
 
 def process_epoch(lines, q, batch_size, nb_samp, dic_spk, base_dir): 
+	'''
+	Wrapper function for processing mini-batches for the train set once.
+	'''
 	f_desc_dic = {}
 	nb_batch = int(len(lines) / batch_size)
 	for i in range(nb_batch):
@@ -108,6 +128,9 @@ def process_epoch(lines, q, batch_size, nb_samp, dic_spk, base_dir):
 #======================================================================#
 #======================================================================#
 if __name__ == '__main__':
+	#======================================================================#
+	#==Yaml load===========================================================#
+	#======================================================================#
 	_abspath = os.path.abspath(__file__)
 	dir_yaml = os.path.splitext(_abspath)[0] + '.yaml'
 	with open(dir_yaml, 'r') as f_yaml:
@@ -193,7 +216,7 @@ if __name__ == '__main__':
 			loss_weights = {'s_bs_loss':1, 'c_loss': parser['c_lambda']},
 		metrics=['accuracy'])
 	
-	best_val_eer = '99.'
+	best_val_eer = 99.
 	for epoch in tqdm(range(parser['epoch'])):
 		np.random.shuffle(dev_lines)
 		p = Thread(target = process_epoch, args = (dev_lines,
@@ -280,14 +303,12 @@ if __name__ == '__main__':
 			model.save_weights(save_dir +  'models_pretrn/%d-%.4f.h5'%(epoch, eer))
 	f_eer.close()
 	
-	
-	
 	#======================================================================#
 	#==Train RawNet========================================================#
 	#======================================================================#
 	model, m_name = get_model(argDic = parser['model'])
 	model_pred = Model(inputs=model.get_layer('input_RawNet').input, outputs=model.get_layer('code_RawNet').output)
-	model.load_weights(save_dir+'best_model_on_validation.h5', by_name = True)
+	model.load_weights(save_dir+'models_pretrn/best_model_on_validation.h5', by_name = True)
 
 
 	with open(save_dir + 'summary_RawNet.txt' ,'w+') as f_summary:
@@ -300,21 +321,21 @@ if __name__ == '__main__':
 	f_eer = open(save_dir + 'eers_RawNet.txt', 'w', buffering=1)
 
 	optimizer = eval(parser['optimizer'])(lr=parser['lr'], decay = parser['opt_decay'], amsgrad = bool(parser['amsgrad']))
-
+	parser['c_lambda'] = parser['c_lambda'] * 0.01
 	if bool(parser['mg']):
 		model_mg = multi_gpu_model(model, gpus=parser['nb_gpu'])
 		model_mg.compile(optimizer = optimizer,
-			loss = {'s_bs_loss':simple_loss,
-					'c_loss':zero_loss},
-			loss_weights = {'s_bs_loss':1, 'c_loss':parser['c_lambda']},
+			loss = {'gru_s_bs_loss':simple_loss,
+					'gru_c_loss':zero_loss},
+			loss_weights = {'gru_s_bs_loss':1, 'gru_c_loss':parser['c_lambda']},
 			metrics=['accuracy'])
 	model.compile(optimizer = optimizer,
-			loss = {'s_bs_loss':simple_loss,
-					'c_loss':zero_loss},
-			loss_weights = {'s_bs_loss':1, 'c_loss': parser['c_lambda']},
+			loss = {'gru_s_bs_loss':simple_loss,
+					'gru_c_loss':zero_loss},
+			loss_weights = {'gru_s_bs_loss':1, 'gru_c_loss': parser['c_lambda']},
 		metrics=['accuracy'])
 	
-	best_val_eer = '99.'
+	best_val_eer = 99.
 	for epoch in tqdm(range(parser['epoch'])):
 		np.random.shuffle(dev_lines)
 		p = Thread(target = process_epoch, args = (dev_lines,
@@ -401,7 +422,6 @@ if __name__ == '__main__':
 			model.save_weights(save_dir +  'models_RawNet/%d-%.4f.h5'%(epoch, eer))
 	f_eer.close()
 
-
 	#======================================================================#
 	#==Extract RawNet Embeddings===========================================#
 	#======================================================================#
@@ -412,13 +432,13 @@ if __name__ == '__main__':
 
 	print('Extracting Embeddings from GRU model: dev set')
 	dev_dic_embeddings = compose_spkFeat_dic(lines = dev_lines,
-		model = model_gru_pred,
+		model = model_pred,
 		f_desc_dic = {},
 		base_dir = parser['base_dir'])
 
 	print('Extracting Embeddings from GRU model: eval set')
 	eval_dic_embeddings = compose_spkFeat_dic(lines = eval_lines,
-		model = model_gru_pred,
+		model = model_pred,
 		f_desc_dic = {},
 		base_dir = parser['base_dir'])
 
