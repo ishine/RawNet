@@ -1,37 +1,51 @@
-This github project includes codes for reproducing experiments and DNN models used in the paper
-===============================================================================================
+# Notice
+This repository is under update to reflect codes for reproducing our recent paper. 
+For reproduction of the original RawNet paper, please refer to `RawNet1' folder.
 
-RawNet: Advanced end-to-end deep neural network using raw waveforms for text-independent speaker verification
-- Currently submitted to Interspeech2019 as a conference paper.
-- arXiv pre-print is at https://arxiv.org/abs/1904.08104
-	
+# Overview
+This github project includes PyTorch implementation for reproducing experiments and DNN models used in the paper
+[Improved RawNet with Filter-wise Re-scaling for Text-independent Speaker Verification using Raw Waveforms]( https://arxiv.org/pdf/2004.00526.pdf ) 
+which is submitted to Interspeech2020 as a conference paper. 
+Pre-trained model is available at 'Pre-trained_model/rawnet2_best_weights.pt' and extracted speaker embeddings are available at 'spk_embd/'. 
 
-Below are few notes for reproduction
-------------------------------------
-	1. Script 'lunch_ngc.sh' is used to create a virtual environment for DNN training using NGC(nvidia gpu cloud).
-	2. Script '00-pre_process_waveforms.py' was conducted in another workstation when we reproduced experiemnts regarding RawNet.
-	3. For back-end research or front-end verification, we provide speaker embeddings extracted with RawNet at 'data/speaker_embeddings_RawNet'. 
-		Cosine similarity metric with this embeddings demonstrate EER of 4.8 % on the VoxCeleb1 evaluation set. 
-		This file can also obtained by running script '01-trn_RawNet.py' (minor differences can occur due to random seed).
+# Usage
 
-For those who want to use RawNet embeddings.
---------------------------------------------
+## Environment Setting
+We used Nvidia GPU Cloud for conducting our experiments. We used the 'nvcr.io/nvidia/pytorch:19.10-py3' image. Refer to 'launch_ngc.sh'. We used two Titan V GPUs for training. 
 
-'data/speaker_embeddings_RawNet_4.8eer' contains speaker embeddings extracted using RawNet. 
-Load it using python pickle library, a dictionary will be obtained. 
-It has two keys: ['dev_dic_embeddings', 'eval_dic_embeddings'] where each value corresponding to the key is a dictionary that has speaker embeddings.
-Decoding with cosine similarity with VoxCeleb1 dataset will yield an EER of 4.8 %. 
-In our paper, training a b-vector classifier using these embeddings yielded an EER of 4.0 %. 
+## Training RawNet2
 
-For other back-end researches on speaker verification, using these speaker embeddings might be a good start :)
+1. (selectively) Enter virtual environment using NGC. 
+2. Run 'train_RawNet2.py -name NAME'
+
+##  Evaluate Pre-trained Model
+
+1. Go into Pre-trained_model folder. 
+2. Download extracted RawNet2 speaker embeddings for the VoxCeleb1 devset [Here]( https://www.dropbox.com/s/2y4k5rap8cztcrf/TTA_vox1_dev.pk?dl=0 )
+(Too big to upload in Github)
+
+3. Run 'evaluate_pretrained_RawNet2.py'
 
 
-Other guidelines are currently being updated.
----------------------------------------------
-Email jeewon.leo.jung@gmail.com for other details :-).
 
-Log
-- 2019.04.17. : 01 script executing
-- 2019.04.24. : 01 script verified.
-- 2019.04.29. : 02 script executing 
-- 2019.04.29. : 02 script verified.
+
+
+##### Email jeewon.leo.jung@gmail.com for other details :-).
+
+# Citation
+
+TBA
+
+```
+@article{jung2019RawNet,
+  title={RawNet: Advanced end-to-end deep neural network using raw waveforms for text-independent speaker verification},
+  author={Jung, Jee-weon and Heo, Hee-soo and Kim, ju-ho and Shim, Hye-jin and Yu, Ha-jin},
+  journal={Proc. Interspeech 2019},
+  pages={1268--1272},
+  year={2019}
+}
+```
+
+
+# Log
+- 2020.04.01. : initial commit
