@@ -15,9 +15,9 @@ def get_args():
     parser = argparse.ArgumentParser()
     #dir
     parser.add_argument('-name', type = str, required = True)
-    parser.add_argument('-save_dir', type = str, default = '/exp/DNNs/')
-    parser.add_argument('-DB', type = str, default = '/DB/VoxCeleb1/')
-    parser.add_argument('-DB_vox2', type = str, default = '/DB/VoxCeleb2/')
+    parser.add_argument('-save_dir', type = str, default = 'DNNs/')
+    parser.add_argument('-DB', type = str, default = 'DB/VoxCeleb1/')
+    parser.add_argument('-DB_vox2', type = str, default = 'DB/VoxCeleb2/')
     parser.add_argument('-dev_wav', type = str, default = 'wav/')
     parser.add_argument('-val_wav', type = str, default = 'dev_wav/')
     parser.add_argument('-eval_wav', type = str, default = 'eval_wav/')
@@ -48,6 +48,7 @@ def get_args():
     parser.add_argument('-m_nb_fc_node', type = int, default = 1024)
     parser.add_argument('-m_gru_node', type = int, default = 1024)
     parser.add_argument('-m_nb_gru_layer', type = int, default = 1)
+    parser.add_argument('-m_nb_samp', type = int, default = 59049)
     
     #flag
     parser.add_argument('-amsgrad', type = str2bool, nargs='?', const=True, default = True)
