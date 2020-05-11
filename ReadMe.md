@@ -1,8 +1,8 @@
 # Overview
 This github project includes PyTorch implementation for reproducing experiments and DNN models used in the paper
-[Improved RawNet with Filter-wise Re-scaling for Text-independent Speaker Verification using Raw Waveforms]( https://arxiv.org/pdf/2004.00526.pdf ) 
+[Improved RawNet with Feature Map Scaling for Text-independent Speaker Verification using Raw Waveforms]( https://arxiv.org/pdf/2004.00526.pdf ) 
 which is submitted to Interspeech2020 as a conference paper. 
-Pre-trained model is available at 'Pre-trained_model/rawnet2_best_weights.pt' and extracted speaker embeddings are available at *spk_embd/*. 
+Trained model is available at 'Pre-trained_model/rawnet2_best_weights.pt' and extracted speaker embeddings are available at *spk_embd/*. 
 
 **For reproduction of the original RawNet paper, please refer to 'RawNet1' folder.**
 
@@ -20,7 +20,7 @@ Filetree will be added as reference in meantime.
 2. (selectively) Enter virtual environment using NGC. 
 3. Run *train_RawNet2.py -name NAME*
 
-##  Evaluate Pre-trained Model
+##  Evaluating the Trained Model to achieve EER reported in the paper.
 
 1. Go into Pre-trained_model folder. 
 2. Download extracted RawNet2 speaker embeddings for the VoxCeleb1 devset [Here]( https://www.dropbox.com/s/2y4k5rap8cztcrf/TTA_vox1_dev.pk?dl=0 )
@@ -38,10 +38,17 @@ Value : Speaker embedding
 
 ##### Email jeewon.leo.jung@gmail.com for other details :-).
 
-# Citation
+# BibTex
 
-TBA
-
+This reposity provides the code for reproducing below papers. 
+```
+@article{jung2020improved,
+  title={Improved RawNet with Feature Map Scaling for Text-independent Speaker Verification using Raw Waveforms},
+  author={Jung, Jee-weon and Kim, Seung-bin and Shim, Hye-jin and Kim, Ju-ho and Yu, Ha-Jin},
+  journal={arXiv preprint arXiv:2004.00526},
+  year={2020}
+}
+```
 ```
 @article{jung2019RawNet,
   title={RawNet: Advanced end-to-end deep neural network using raw waveforms for text-independent speaker verification},
